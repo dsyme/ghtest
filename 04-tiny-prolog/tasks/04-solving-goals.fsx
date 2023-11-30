@@ -56,24 +56,20 @@ let query (program:list<Clause>) (query:Term) =
 let rec solve program subst goals = 
   match goals with 
   | g::goals -> 
-      // TODO: We need to solve the goal (term) 'g'. To do so, find all 
-      // matching clauses in the 'program' using 'query' and iterate over
-      // the returned list using 'for clause, newSubst in matches do'.
-      // For each possible solution, we need to add the 'clause.Body' to 
-      // the list of 'goals' and apply the substitution 'newSubst' to the
-      // new concatentated list of 'goals'. Then we need to apply the 
-      // substitution 'newSubst' to the substitution 'subst' we have so far,
-      // append the two and call 'solve' recursively with this new substitution
-      // to solve the new goals.
-      let matches = failwith "TODO"
+      // Find all matching clauses for the goal and iterate over them
+      let matches = query program g
       for clause, newSubst in matches do
-        let newGoals = failwith "TODO"
-        solve program (failwith "TODO") (failwith "TODO")
-
+        // Add the body of the clause to the goals and apply the substitution
+        let newGoals = clause.Body @ substituteTerms (Map.ofList newSubst) goals
+        // Apply the substitution to the existing substitution and append them
+        let newSubst = substituteSubst (Map.ofList newSubst) subst @ newSubst
+        // Solve the new goals with the new substitution
+        solve program newSubst newGoals
   | [] -> 
-    // TODO: We solved all goals, which means 'subst' is a possible solution!
-    // Print 'subst' (either using printfn "%A" or in some nicer way).
-    failwith "not implemented" 
+    // Print the final substitution
+    printfn "Solution:"
+    for var, term in subst do
+      printfn "  %s = %s" var (formatTerm term)
 
 // ----------------------------------------------------------------------------
 // Querying the British royal family 
@@ -102,4 +98,3 @@ solve family [] [ Predicate("father", [Variable("X"); Atom("William")]) ]
 // Result #1: [ X -> Charles, Y -> William, ... ]
 // Result #2: [ X -> George, Y -> William, ... ]
 solve family [] [ Predicate("father", [Variable("X"); Variable("Y")]) ]
-
